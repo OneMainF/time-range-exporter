@@ -26,6 +26,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.yaml.snakeyaml.Yaml;
 
 import com.hubspot.jinjava.Jinjava;
@@ -45,42 +47,69 @@ public class Main extends Collector {
 	static HashMap<String,Object> bindings=new HashMap<String,Object>();
 	static String prefix;
 	static ArrayList<Definition> definitions=new ArrayList<Definition>();
+	static DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HHmmss");
 	
 	static {
 		bindings.put("system", System.getProperties());
 		bindings.put("environment", System.getenv());
 	}
-	
+	static String toCamelcase(String s) {
+		String[] x=s.split("_");
+		StringBuilder b=new StringBuilder();
+		b.append(x[0]);
+		for(int i=1;i<x.length;i++) {
+			b.append(x[i].substring(0, 1).toUpperCase()+x[i].toLowerCase().substring(1));
+		}
+		return b.toString();
+	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static HashMap<String,Object> readConfig(String filename){
-		Path path=Paths.get(filename);
-		HashMap<String,Object> returnData=new HashMap<String,Object>();
-		logger.info("Loading config file "+path.toString());
-		try {
-			byte[] encoded = Files.readAllBytes(path);
-			String data=new String(encoded, Charset.defaultCharset());
-			//evaluate any templating
-			data=jinjava.render(data, bindings);
-			//load to map
-        	Object map=yaml.load(data);
-    		//if an array list, convert to map
-        	if(map instanceof ArrayList) {
-        		returnData.put("metrics", map);
-        	}else {
-        		returnData=(HashMap<String, Object>) map;
-        	}
-    	}catch(Exception e) {
-    		logger.error("Could not load config",e);
-    	}
+	public static HashMap<String,Object> readConfig(File file){
 		
+		
+		HashMap<String,Object> returnData=new HashMap<String,Object>();
+		if(file.isFile()) {
+			Path path=Paths.get(file.getAbsolutePath());
+			logger.info("Loading config file "+path.toString());
+			try {
+				byte[] encoded = Files.readAllBytes(path);
+				String data=new String(encoded, Charset.defaultCharset());
+				//evaluate any templating
+				data=jinjava.render(data, bindings);
+				//load to map
+	        	Object map=yaml.load(data);
+	    		//if an array list, convert to map
+	        	if(map instanceof ArrayList) {
+	        		returnData.put("metrics", map);
+	        	}else {
+	        		returnData=(HashMap<String, Object>) map;
+	        	}
+	    	}catch(Exception e) {
+	    		logger.error("Could not load config",e);
+	    	}
+		}else {
+			logger.info("No config file loaded");
+		}
 		//Reset definitions in case of update
 		Definition.reset();
 		prefix=returnData.getOrDefault("prefix","time_range_").toString();
 		ArrayList<HashMap<String,Object>> metrics=(ArrayList) returnData.getOrDefault("metrics",new ArrayList<Object>());
+
 		//create definitions
 		for(HashMap<String,Object> metric:metrics) {
 		    definitions.add(new Definition(metric));	
 		}
+		definitions.add(new Definition("time","Current time in format HHmmss","time"));
+	    definitions.add(new Definition("hour","Current hour of day","hour"));
+	    definitions.add(new Definition("minute","Current minute of day","minute"));
+	    definitions.add(new Definition("second","Current second of minute","second"));
+	    definitions.add(new Definition("week","Current week of year","week"));
+	    definitions.add(new Definition("month","Current month of year","month"));
+	    definitions.add(new Definition("year","Current year","year"));
+	    definitions.add(new Definition("week_of_month","Current week of the month","weekOfMonth"));
+	    definitions.add(new Definition("day_of_month","Current day of the month","dayOfMonth"));
+	    definitions.add(new Definition("day_of_week","Current day of the week","dayOfWeek"));
+	    definitions.add(new Definition("day_of_year","Current day of the year","dayOfYear"));
+
 		return returnData;
 	}
 	
@@ -146,39 +175,36 @@ public class Main extends Collector {
 	        
 	   
 	        final File configFile=new File(file);
-	  
-	        if(!configFile.isFile()) {
-	        	logger.error("Could file does not exist or is not accessible");
-	        	System.exit(1);
-	        }
-	        
-	        HashMap<String,Object> config = readConfig(configFile.getAbsolutePath());
-	        
-	        
-	        //start file monitor thread
-	        new Thread(){
-		    	long lastMod=0;
-		    	public void run(){
-		    		lastMod=configFile.lastModified();
-		    	    while(true){
-		    	    	//check for updates to file
-		    	       try {
-		    			  Thread.sleep(5000);
-		    		   } catch (InterruptedException e) {
-		    			  break;
-		    		   }
-		    	       if(configFile.lastModified()!=lastMod){
-		    	    	   lastMod=configFile.lastModified();
-		    	    	   try {
-		    	    		 readConfig(configFile.getAbsolutePath());
-		    			   } catch (Exception e) {
-		    				 e.printStackTrace();
-		    		   }
-		    	     }
-		    	   }	    		
-		    	}
-		    }.start();
+ 	        
+		    HashMap<String,Object> config = readConfig(configFile);
 		        
+		        
+		    //start file monitor thread
+		    new Thread(){
+			   	long lastMod=0;
+			   	public void run(){
+			   		if(configFile.isFile()) {
+			   		  lastMod=configFile.lastModified();
+			   		}
+			   	    while(true){
+			   	    	//check for updates to file
+			   	       try {
+			   			  Thread.sleep(5000);
+			   		   } catch (InterruptedException e) {
+			   			  break;
+			   		   }
+			   	       if(configFile.isFile()&&configFile.lastModified()!=lastMod){
+			   	    	   lastMod=configFile.lastModified();
+			   	    	   try {
+			   	    		 readConfig(configFile);
+			   			   } catch (Exception e) {
+			   				 e.printStackTrace();
+			   		   }
+			   	     }
+			   	   }	    		
+			   	}
+			}.start();
+	        
 	        
 	        
 	        //read port argument
@@ -210,6 +236,7 @@ public class Main extends Collector {
         }
         
 	}
+	
 
 
 	@Override
@@ -223,22 +250,26 @@ public class Main extends Collector {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(dt.toDate());
 		int weekOfMonth = calendar.get(Calendar.WEEK_OF_MONTH);
-		    
+		
 		bindings.put("now", dt);
+		bindings.put("time", Integer.valueOf(timeFormatter.print(dt)));
 		bindings.put("hour", dt.getHourOfDay());
 		bindings.put("minute", dt.getMinuteOfDay());
+		bindings.put("second", dt.getSecondOfMinute());
 		bindings.put("week", dt.getWeekOfWeekyear());
+		bindings.put("year", dt.getYear());
+		bindings.put("month", dt.getMonthOfYear());
 		bindings.put("weekOfMonth",weekOfMonth);
 		bindings.put("dayOfMonth", dt.getDayOfMonth());
 		bindings.put("dayOfWeek", dt.getDayOfWeek());
 		bindings.put("dayOfYear", dt.getDayOfYear());
-		bindings.put("year", dt.getYear());
-		bindings.put("month", dt.getMonthOfYear());
+		
 		
 		//evaluate metrics
 		for(Definition definition:definitions) {
-		   definition.evaluate(bindings);   
+		  definition.evaluate(bindings);   
 		}
+		
 		
 		//return metric list
 		return Definition.getList();

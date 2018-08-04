@@ -1,26 +1,46 @@
 Time Range Exporter
 =====
 
-Simple Prometheus exporter to set a metric to either 0 for false or 1 for true depending on time conditions
+Simple Prometheus exporter to set a metric to either 0 for false or 1 for true depending on time conditions.
+
+Some current time attributes are also exported by default.
+
+This may seem like a useless exporter, but the ideal is to use it for alerting.  
+
+I couldn't find an easy way to only alert during a specific time range, so I made a solution.
 
 
 ## Running
 
-To run as a jetty server [download the jar](https://evdcigl.corp.fin/dcipowersystems/wasnd-prometheus-exporter/raw/master/releases/wasnd-prometheus-exporter-1.0.0.war) and run:
+To run as a jetty server [download the jar](https://github.com/OneMainF/time_range_exporter/releases/download/1.0/time-range-exporter-1.0.0.jar) and run:
 
 ```
-java -jar time-prometheus-exporter-1.0.0.war --port 8080 --config config.yml
+java -jar time-prometheus-exporter-1.0.0.war --port 8080
 ```
 
 Metrics will now be accessible at http://localhost:8080/metrics
 
-Jinjava is used for condition evaluation
-The following variables are available
-`system`,`environment`,`now`,`week`, `dayOfWeek`, `hour`, `minute`, `month`, `dayOfMonth`, `dayOfYear`, `year`, and `weekOfMonth`
+[jin-java](https://github.com/HubSpot/jinjava) is used for condition evaluation
 
-`system` contains all the values from `System.getProperties()`
-`environment` contains all the values from `System.getenv()`
-`now` is a JodaTime DateTime object.  Any of the methods from the object may be accessed in the conditions.  For example `now.getDayOfYear()`
+The following variables are available
+
+Name     | Description
+---------|------------
+system | contains all the values from `System.getProperties()`
+environment | contains all the values from `System.getenv()`
+now | A [joda-time](https://github.com/JodaOrg/joda-time) DateTime object.  Any of the methods from the object may be accessed in the conditions.  For example `now.getDayOfYear()`
+time | Current time in format HHmmss.  Exported by default as `time`.
+hour | Current hour of day.  Exported by default as `hour`.
+minute | Current minute of day.  Exported by default as `minute`.
+second | Current second of minute.  Exported by default as `second`.
+week | Current week of year.  Exported by default as `week`.
+month | Current month of year.  Exported by default as `month`.
+year | Current year.  Exported by default as `year`.
+weekOfMonth | Current week of the month.  Exported by default as `week_of_month`.
+dayOfMonth | Current day of the month.  Exported by default as `day_of_month`.
+dayOfWeek | Current day of the week.  Exported by default as `day_of_week`.
+dayOfYear | Current day of the year.  Exported by default as `day_of_year`.
+
 
 
 
@@ -30,6 +50,8 @@ The following variables are available
 
 
 ## Configuration
+Configuration is optional and may be used to add additional metrics.
+
 The configuration is in YAML syntax.
 
 May be specified with the `-c` command line option, `time.prometheus.exporter.config` system property, or `TIME_EXPORTER_CONFIG` environment variable
@@ -43,33 +65,24 @@ Example config:
 port: 8080
 prefix: "time_range_"
 metrics:
- - name: callcenter
-   match: any
+ - name: callcenter_open
    help: help text here
-   conditions: "hour > 9 and hour < 21"
+   value: "hour > 9 and hour < 21"
    labels:
      label: value
- - name: intranet
-   match: all
-   help: help text here
-   conditions:
-     - "hour > 7 and hour < 13 and dayOfWeek<6"
-     - "dayOfWeek < 6"
- - name: some_other_metric
-   match: none
-   help: help text here
-   conditions: hour > 6
+ - name: year_of_century
+   help: Year of the current century
+   value: "now.getYearOfCentury()"
 ```
 
 Name     | Description
 ---------|------------
-port | Port to listen on.  Command line argument will override
+port | Port to listen on.  Command line argument will override.  Defaults to `8080`
 prefix | Prefix name for metrics.  Defaults to `time_range_`
 metrics | A list of metrics to export.  If the same name is specified for multiple metrics, labels will be merged, and the first set of help will be used
 name | Name for metric.  Prefix will be prepended
 help | Help text for metric.  Defaults to empty
-match | How to handle condition matching. `all` - all conditions must match, `any` - any condition must match, `none` - all conditions must NOT match.  Defaults to `all`
-conditions | Either a single or list of conditions.  JinJava will be used to evaluate.
+value | Value to use for the metric.  If true is returned, value will be set to 1.  If false is returned, value will be set to 0.  If a valid number is returned, value will be set to that number.
 labels | Labels to set for metric
 
 ## Authors

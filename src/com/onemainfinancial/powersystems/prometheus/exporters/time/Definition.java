@@ -5,12 +5,26 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.Collector.Type;
 
 
 public class Definition{
+	public Definition(String name,String help,String value) {
+		HashMap<String,Object> props=new HashMap<String,Object>();
+		props.put("name",name);
+		props.put("help",help);
+		props.put("value",value);
+		init(props);
+	}
 	public Definition(HashMap<String,Object> props) {
+		init(props);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void init(HashMap<String,Object> props) {
 		name=Main.prefix+props.get("name").toString();
 		
 		//if not added yet, create MetricFamilySamples
@@ -21,12 +35,10 @@ public class Definition{
 		}
 		
 		
-		if(props.containsKey("conditions")) {
-			if(props.get("conditions") instanceof String) {
-				conditions=new ArrayList<String>();
-				conditions.add(props.get("conditions").toString());
-			}else {
-				conditions=(ArrayList<String>) props.get("conditions");
+		if(props.containsKey("value")) {
+			value=props.get("value").toString();
+			if(!value.startsWith("{{")) {
+				value="{{"+value+"}}";
 			}
 		}
 		
@@ -42,11 +54,13 @@ public class Definition{
 			}
 		}
 	}
-	
-	ArrayList<String> conditions=new ArrayList<String>();
+	static Logger logger=Logger.getLogger(Definition.class);
+
+	String value;
 	String match;
 	String name;
 	HashMap<String,Object> labels=new HashMap<String,Object>();
+	
 	//use LinkedHashMap to retain order
 	static LinkedHashMap<String,MetricFamilySamples> samples=new LinkedHashMap<String,MetricFamilySamples>();
 	static HashMap<String,ArrayList<String>> metric_labels=new HashMap<String,ArrayList<String>>();
@@ -84,36 +98,22 @@ public class Definition{
 			labelValues.add(labels.getOrDefault(s, "").toString());
 		}
 		
-		Integer value=0;
-		if(!match.equals("any")) {
-			value=1;
+		//set value
+		String v=Main.jinjava.render(value,bindings);
+		if(v.equalsIgnoreCase("true")) {
+			samples.get(name).samples.add(new MetricFamilySamples.Sample(name,labelNames,labelValues, 1));
+		}else if(v.equalsIgnoreCase("false")){
+			samples.get(name).samples.add(new MetricFamilySamples.Sample(name,labelNames,labelValues, 0));
+		}else {
+			try {
+				Double value=Double.valueOf(v);
+				samples.get(name).samples.add(new MetricFamilySamples.Sample(name,labelNames,labelValues, value));
+			}catch(Exception e) {
+				logger.error("Invalid value returned by condition "+value+" for metric "+name);
+			}
 		}
+
 		
-		for(String condition:conditions) {
-			Boolean matches= Boolean.valueOf(Main.jinjava.render("{{"+condition+"}}",bindings));
-			//if 'any' and matches, set true
-			if(match.equals("any")) {
-				if(matches) {
-					value=1;
-					break;
-				}
-			//if 'none' and matches, set false
-			}else if(match.equals("none")) {
-				if(matches) {
-					value=0;
-					break;
-				}
-		    //if 'all' and not matches, set false
-			}else {
-				if(!matches) {
-					value=0;
-					break;
-				}
-			}	
-		}
-		
-		//add sample
-		samples.get(name).samples.add(new MetricFamilySamples.Sample(name,labelNames,labelValues, value));
 		
 		
 	}
