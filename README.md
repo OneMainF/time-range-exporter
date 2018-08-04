@@ -1,7 +1,7 @@
 Time Range Exporter
 =====
 
-Simple Prometheus exporter to set a metric to either 0 or 1 depending on time conditions
+Simple Prometheus exporter to set a metric to either 0 for false or 1 for true depending on time conditions
 
 
 ## Running
