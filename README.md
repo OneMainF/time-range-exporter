@@ -25,6 +25,7 @@ Metrics will now be accessible at http://localhost:8080/metrics
 The following variables are available.
 
 Some metrics are exported by default in camel case format with the prefix name prepended.
+For example `time_range_hour`
 
 Name     | Description
 ---------|------------
