@@ -22,7 +22,9 @@ Metrics will now be accessible at http://localhost:8080/metrics
 
 [jin-java](https://github.com/HubSpot/jinjava) is used for condition evaluation
 
-The following variables are available
+The following variables are available.
+
+Some metrics are exported by default in camel case format with the prefix name prepended.
 
 Name     | Description
 ---------|------------
