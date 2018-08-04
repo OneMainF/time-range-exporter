@@ -9,7 +9,7 @@ Simple Prometheus exporter to set a metric to either 0 for false or 1 for true d
 To run as a jetty server [download the jar](https://evdcigl.corp.fin/dcipowersystems/wasnd-prometheus-exporter/raw/master/releases/wasnd-prometheus-exporter-1.0.0.war) and run:
 
 ```
-java -jar time-prometheus-exporter-1.0.0.war --port 8080 --config config.yml
+java -jar time-range-exporter-1.0.0.war --port 8080 --config config.yml
 ```
 
 Metrics will now be accessible at http://localhost:8080/metrics
