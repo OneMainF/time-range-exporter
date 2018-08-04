@@ -63,7 +63,6 @@ Config file is monitored for updates dynamically.
 Example config:
 
 ```yaml
----
 port: 8080
 prefix: "time_range_"
 metrics:
