@@ -4,7 +4,7 @@ Time Range Exporter
 Simple Prometheus exporter to set a metric to either 0 for false or 1 for true depending on time conditions.
 Some current time attributes are also exported by default.
 
-##But....why? 
+## But....why? 
 
 This may seem like a useless exporter, but the ideal is to use it for alerting.  
 I couldn't find an easy way to only alert during a specific time range, so I made a solution.
