@@ -30,7 +30,7 @@ Name     | Description
 ---------|------------
 system | contains all the values from `System.getProperties()`
 environment | contains all the values from `System.getenv()`
-now | A [joda-time](https://github.com/JodaOrg/joda-time) DateTime object.  Any of the methods from the object may be accessed in the conditions.  For example `now.getDayOfYear()`
+now | A [joda-time](https://github.com/JodaOrg/joda-time) DateTime object.  Any of the methods from the object may be accessed for metric values.  For example `now.getDayOfYear()`
 time | Current time in format HHmmss.  Exported by default as `time`.
 hour | Current hour of day.  Exported by default as `hour`.
 minute | Current minute of day.  Exported by default as `minute`.
