@@ -1,8 +1,7 @@
 Time Range Exporter
 =====
-
-Simple Prometheus exporter to set a metric to either 0 for false or 1 for true depending on time conditions.
-Some current time attributes are also exported by default.
+Exports current time as a Prometheus metrics.
+Additional metrics may be exported by providing a configuration file.
 
 ## But....why? 
 
