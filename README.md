@@ -12,7 +12,7 @@ I couldn't find an easy way to only alert during a specific time range, so I mad
 
 ## Running
 
-To run as a jetty server [download the jar](https://github.com/OneMainF/time_range_exporter/releases/download/1.0/time-range-exporter-1.0.0.jar) and run:
+To run [download the jar](https://github.com/OneMainF/time_range_exporter/releases/download/1.0/time-range-exporter-1.0.0.jar) and run:
 
 ```
 java -jar time-range-exporter-1.0.0.jar
