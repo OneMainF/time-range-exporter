@@ -1,6 +1,6 @@
 Time Range Exporter
 =====
-Exports current time as a Prometheus metrics.
+Exports the current time as Prometheus metrics.
 Additional metrics may be exported by providing a configuration file.
 
 ## But....why? 
