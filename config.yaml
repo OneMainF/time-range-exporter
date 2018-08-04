@@ -1,0 +1,6 @@
+prefix: corpfin_in_business_hours_
+metrics:
+ - name: "callcenter"
+   conditions: "hour > 9 and hour < 21"
+ - name: "intranet"
+   conditions: "hour > 7 and hour < 13 and dayOfWeek < 6"
