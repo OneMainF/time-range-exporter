@@ -15,7 +15,7 @@ I couldn't find an easy way to only alert during a specific time range, so I mad
 To run as a jetty server [download the jar](https://github.com/OneMainF/time_range_exporter/releases/download/1.0/time-range-exporter-1.0.0.jar) and run:
 
 ```
-java -jar time-prometheus-exporter-1.0.0.war --port 8080
+java -jar time-range-exporter-1.0.0.jar
 ```
 
 Metrics will now be accessible at http://localhost:8080/metrics
