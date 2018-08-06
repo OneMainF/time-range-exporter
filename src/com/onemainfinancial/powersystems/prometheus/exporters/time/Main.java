@@ -138,7 +138,7 @@ public class Main extends Collector {
 		
 		definitions.add(new Definition("current_time","Current time in format HHmmss","time"));
 	    definitions.add(new Definition("current_hour","Current hour of day","hour"));
-	    definitions.add(new Definition("current_minute","Current minute of day","minute"));
+	    definitions.add(new Definition("current_minute","Current minute of hour","minute"));
 	    definitions.add(new Definition("current_second","Current second of minute","second"));
 	    definitions.add(new Definition("current_week","Current week of year","week"));
 	    definitions.add(new Definition("current_month","Current month of year","month"));
@@ -346,7 +346,7 @@ public class Main extends Collector {
 		bindings.put("now", dt);
 		bindings.put("time", Integer.valueOf(timeFormatter.print(dt)));
 		bindings.put("hour", dt.getHourOfDay());
-		bindings.put("minute", dt.getMinuteOfDay());
+		bindings.put("minute", dt.getMinuteOfHour());
 		bindings.put("second", dt.getSecondOfMinute());
 		bindings.put("week", dt.getWeekOfWeekyear());
 		bindings.put("year", dt.getYear());
