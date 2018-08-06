@@ -34,7 +34,7 @@ metric | contains the properties from the current metric definition
 now | A [joda-time](https://github.com/JodaOrg/joda-time) DateTime object.  Any of the methods from the object may be accessed for metric values.  For example `now.getDayOfYear()`
 time | Current time in format HHmmss. | current_time
 hour | Current hour of day. | current_hour
-minute | Current minute of day. | current_minute
+minute | Current minute of hour. | current_minute
 second | Current second of minute. | current_second
 week | Current week of year. | current_week
 month | Current month of year. | current_month
