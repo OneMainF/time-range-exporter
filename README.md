@@ -52,7 +52,7 @@ currentWeekdayNumberInMonth | The current number of this weekday in the month.  
 
 Additionally the following holidays are also exported as `is_holiday{holiday}`
 
-Holiday     | Metric Valus
+Holiday     | Metric Values
 ------------|-----------
 New Years Day | dayOfYear == 1
 Martin Luther King Day | month == 1 and nameOfDay == 'Monday' and currentWeekdayNumberInMonth == 3
