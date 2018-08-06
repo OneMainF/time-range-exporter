@@ -13,10 +13,27 @@ import io.prometheus.client.Collector.Type;
 
 public class Definition{
 	public Definition(String name,String help,String value) {
+		this(name,help,value,(String[])null,(String[])null);
+	}
+	public Definition(String name,String help,String value,String label,String labelValue) {
+		this(name,help,value,new String[] {label},new String[] {labelValue});
+	}
+	public Definition(String name,String help,String value,String[] labels,String[] labelValues) {
 		HashMap<String,Object> props=new HashMap<String,Object>();
 		props.put("name",name);
 		props.put("help",help);
 		props.put("value",value);
+		HashMap<String,Object> labelMap=new HashMap<String,Object>();
+		props.put("labels",labelMap);
+		if(labels!=null) {
+			int i=0;
+			for(String s:labels) {
+				labelMap.put(s,labelValues[i]);
+				i++;
+			}
+			
+		}
+	
 		init(props);
 	}
 	public Definition(HashMap<String,Object> props) {
@@ -53,9 +70,11 @@ public class Definition{
 				}
 			}
 		}
+		this.props=props;
 	}
 	static Logger logger=Logger.getLogger(Definition.class);
-
+    
+	HashMap<String,Object> props;
 	String value;
 	String match;
 	String name;
@@ -64,6 +83,9 @@ public class Definition{
 	//use LinkedHashMap to retain order
 	static LinkedHashMap<String,MetricFamilySamples> samples=new LinkedHashMap<String,MetricFamilySamples>();
 	static HashMap<String,ArrayList<String>> metric_labels=new HashMap<String,ArrayList<String>>();
+	
+	
+	
 	
 	//return a list of all MetricFamilySamlples
 	public static List<MetricFamilySamples> getList() {
@@ -90,9 +112,13 @@ public class Definition{
 	
 	//evaluate conditions
 	public void evaluate(HashMap<String,Object> bindings) {
+		bindings.put("metric", props);
+		
 		//get labels for this metric
 		ArrayList<String> labelNames=metric_labels.get(name);
 		ArrayList<String> labelValues=new ArrayList<String>();
+		
+		
 		//get label values 
 		for(String s:labelNames) {
 			labelValues.add(labels.getOrDefault(s, "").toString());
@@ -109,7 +135,7 @@ public class Definition{
 				Double value=Double.valueOf(v);
 				samples.get(name).samples.add(new MetricFamilySamples.Sample(name,labelNames,labelValues, value));
 			}catch(Exception e) {
-				logger.error("Invalid value returned by condition "+value+" for metric "+name);
+				logger.error("Invalid value ["+v+"] returned by condition "+value+" for metric "+name);
 			}
 		}
 
